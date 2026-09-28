@@ -1,0 +1,10 @@
+CREATE TABLE `rooms` (`id` text PRIMARY KEY NOT NULL, `room_key` text NOT NULL UNIQUE, `name` text NOT NULL, `status` text DEFAULT 'lobby' NOT NULL, `current_round_id` text, `created_at` integer NOT NULL);
+CREATE TABLE `players` (`id` text PRIMARY KEY NOT NULL, `room_id` text NOT NULL, `name` text NOT NULL, `token` text NOT NULL UNIQUE, `is_host` integer DEFAULT 0 NOT NULL, `score` integer DEFAULT 0 NOT NULL, `joined_at` integer NOT NULL, `last_seen` integer NOT NULL);
+CREATE INDEX `idx_players_room` ON `players` (`room_id`);
+CREATE TABLE `rounds` (`id` text PRIMARY KEY NOT NULL, `room_id` text NOT NULL, `number` integer NOT NULL, `puzzle_json` text NOT NULL, `solution_json` text NOT NULL, `status` text DEFAULT 'thinking' NOT NULL, `started_at` integer NOT NULL, `first_submit_at` integer, `deadline` integer, `winner_player_id` text, `winning_moves` integer);
+CREATE INDEX `idx_rounds_room` ON `rounds` (`room_id`);
+CREATE TABLE `submissions` (`id` text PRIMARY KEY NOT NULL, `round_id` text NOT NULL, `player_id` text NOT NULL, `moves` integer NOT NULL, `path_json` text NOT NULL, `submitted_at` integer NOT NULL);
+CREATE INDEX `idx_submissions_round_rank` ON `submissions` (`round_id`,`moves`,`submitted_at`);
+CREATE TABLE `events` (`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL, `room_id` text NOT NULL, `kind` text NOT NULL, `message` text NOT NULL, `created_at` integer NOT NULL);
+CREATE INDEX `idx_events_room_id` ON `events` (`room_id`,`id`);
+PRAGMA optimize;
