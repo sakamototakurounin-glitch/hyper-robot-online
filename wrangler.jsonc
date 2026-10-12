@@ -7,7 +7,7 @@
     {
       "binding": "DB",
       "database_name": "hyper-robot-db",
-      "database_id": "REPLACE_WITH_YOUR_D1_DATABASE_ID",
+      "database_id": "69d393ea-7975-4fb2-958b-3b52f4311651",
       "migrations_dir": "drizzle"
     }
   ]

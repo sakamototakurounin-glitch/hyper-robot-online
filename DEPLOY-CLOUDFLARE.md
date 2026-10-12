@@ -1,5 +1,9 @@
 # ハイパーロボット ONLINE
 
+公開サイト: https://hyper-robot-online.sakamototakurounin.workers.dev
+
+このリポジトリの設定は現在の公開先に接続済みです。同じCloudflareアカウントで更新する場合は、npm ci → npx wrangler login → npm run deploy の順で実行します。以下は別アカウントに新しく公開する場合の手順です。
+
 ルーム名で集まれるオンライン対戦ロボットパズル。1人プレイ、ボット、6色のロボット、虹色の目的地、最短経路探索、表示テーマを備えています。
 
 ## 公開手順
