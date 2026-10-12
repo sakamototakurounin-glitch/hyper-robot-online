@@ -1,0 +1,1 @@
+ALTER TABLE rooms ADD COLUMN rainbow_targets INTEGER NOT NULL DEFAULT 0;

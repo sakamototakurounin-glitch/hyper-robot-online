@@ -1,0 +1,14 @@
+{
+  "name": "hyper-robot-online",
+  "main": "dist/server/index.js",
+  "compatibility_date": "2026-10-12",
+  "workers_dev": true,
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "hyper-robot-db",
+      "database_id": "REPLACE_WITH_YOUR_D1_DATABASE_ID",
+      "migrations_dir": "drizzle"
+    }
+  ]
+}
