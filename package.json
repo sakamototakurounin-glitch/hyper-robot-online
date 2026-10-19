@@ -8,9 +8,11 @@
     "check": "node --check dist/server/index.js && node --check dist/server/ui.js",
     "db:create": "wrangler d1 create hyper-robot-db",
     "db:migrate": "wrangler d1 migrations apply DB --remote",
-    "deploy": "npm run db:migrate && wrangler deploy"
+    "deploy": "npm run db:migrate && wrangler deploy",
+    "test:e2e": "playwright test"
   },
   "devDependencies": {
+    "@playwright/test": "1.56.1",
     "wrangler": "^4.0.0"
   }
 }
