@@ -4,3 +4,5 @@ node_modules/
 .dev.vars*
 *.sqlite
 *.sqlite3
+test-results/
+playwright-report/
