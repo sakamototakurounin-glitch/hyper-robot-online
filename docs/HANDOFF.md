@@ -5,7 +5,7 @@ Claude Code / Codex のどちらも、作業開始時にこのファイルを読
 ## 作業中（同時編集防止）
 | 担当AI | ブランチ | 編集予定ファイル | 開始日 |
 |---|---|---|---|
-| （なし） | | | |
+| Codex | `codex/claude-permissions` | `.claude/settings.json`、`AGENTS.md`、`docs/HANDOFF.md` | 2026-10-20 |
 
 ## 未解決の問題
 - `.openai/hosting.json` は Codex/OpenAI 側のホスティング設定ファイル。`.gitignore` に `hosting.json` が含まれるが、既に追跡されている。扱いは未決定。
