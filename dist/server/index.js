@@ -10,7 +10,12 @@ function iconResponse(name){const raw=atob(ICONS[name]),bytes=new Uint8Array(raw
 const manifest=JSON.stringify({name:'ハイパーロボット ONLINE',short_name:'ハイパーロボット',start_url:'/',display:'standalone',background_color:'#0b121b',theme_color:'#0b121b',icons:[{src:'/icon-192.png?v=2',sizes:'192x192',type:'image/png',purpose:'any maskable'},{src:'/icon-512.png?v=2',sizes:'512x512',type:'image/png',purpose:'any maskable'}]});
 const id=()=>crypto.randomUUID();
 const clean=(v,max=24)=>String(v||'').trim().replace(/[<>\u0000-\u001f]/g,'').slice(0,max);
-const roomKey=v=>clean(v,30).normalize('NFKC').toLocaleLowerCase('ja-JP');
+const legacyRoomKey=v=>clean(v,30).normalize('NFKC').toLocaleLowerCase('ja-JP');
+// 照合用のルーム名：入力方法で変わりやすい違い（空白・見えない文字・ひらがな/カタカナ・伸ばし棒やダッシュ・波線）を区別しない
+const roomKey=v=>legacyRoomKey(v).replace(/[\s\u200b-\u200f\u2060\ufeff]/g,'').replace(/[\u30a1-\u30f6]/g,c=>String.fromCharCode(c.charCodeAt(0)-0x60)).replace(/[\u2010-\u2015\u2212\u30fc\uff70-]/g,'-').replace(/[\u301c\u3030~]/g,'~');
+// 変更前に作られたルームも見つけられるよう、旧方式のキーでも探す
+const roomKeys=v=>[...new Set([roomKey(v),legacyRoomKey(v)])];
+const findRoom=(db,v)=>{const keys=roomKeys(v);return db.prepare(`SELECT * FROM rooms WHERE room_key IN (${keys.map(()=>'?').join(',')}) ORDER BY created_at DESC LIMIT 1`).bind(...keys).first();};
 const COUNTDOWN_MS=5000,TEMP_EVENT_MS=10000;
 const choices={first:[45,60,75,90,105,120],rounds:[3,5,7,10,15,20],limit:[180,240,300,360,420,480,540,600],points:[0,5,10]};
 async function body(req){try{return await req.json()}catch{return{}}}
@@ -132,14 +137,14 @@ async function api(req,env,path){
     const name=clean(data.name,16),roomName=clean(data.room,30),key=roomKey(roomName),first=Number(data.firstSubmitSeconds||60),total=Number(data.totalRounds||5),limit=Number(data.roundLimitSeconds||180),showMinimum=data.showMinimum?1:0,winPoints=Number(data.winPoints??5),optimalPoints=Number(data.optimalPoints??0),robotCount=Number(data.robotCount??4),rainbowTargets=data.rainbowTargets?1:0;
     if(!name||!key)return json({error:'名前とルーム名を入力してください'},400);
     if(!choices.first.includes(first)||!choices.rounds.includes(total)||!choices.limit.includes(limit)||!choices.points.includes(winPoints)||!choices.points.includes(optimalPoints)||![3,4,5,6].includes(robotCount))return json({error:'ゲーム設定が正しくありません'},400);
-    if(await db.prepare('SELECT id FROM rooms WHERE room_key=?').bind(key).first())return json({error:'そのルーム名は使用中です'},409);
+    if(await findRoom(db,roomName))return json({error:'そのルーム名は使用中です'},409);
     const roomId=id(),playerId=id(),newToken=id()+id(),newProfileId=profileId||id(),wallTheme=Math.floor(Math.random()*16);
     await db.batch([db.prepare("INSERT INTO rooms(id,room_key,name,status,first_submit_seconds,total_rounds,round_limit_seconds,wall_theme,show_minimum,win_points,optimal_points,robot_count,rainbow_targets,created_at) VALUES(?,?,?,'lobby',?,?,?,?,?,?,?,?,?,?)").bind(roomId,key,roomName,first,total,limit,wallTheme,showMinimum,winPoints,optimalPoints,robotCount,rainbowTargets,now),db.prepare('INSERT INTO players(id,room_id,profile_id,name,token,is_host,score,joined_at,last_seen) VALUES(?,?,?,?,?,1,0,?,?)').bind(playerId,roomId,newProfileId,name,newToken,now,now),db.prepare('INSERT INTO events(room_id,kind,message,created_at) VALUES(?,?,?,?)').bind(roomId,'join',name+'がルームを作成',now)]);
     return json({token:newToken,profileId:newProfileId});
   }
   if(path==='/api/room/join'&&req.method==='POST'){
     const name=clean(data.name,16),key=roomKey(data.room);if(!name||!key)return json({error:'名前とルーム名を入力してください'},400);
-    const room=await db.prepare('SELECT * FROM rooms WHERE room_key=?').bind(key).first();if(!room)return json({error:'ルームが見つかりません'},404);
+    const room=await findRoom(db,data.room);if(!room)return json({error:`ルーム「${clean(data.room,30)}」が見つかりません。ルーム名と、作成した人と同じサイトを開いているかを確認してください`},404);
     const duplicate=await db.prepare('SELECT id,last_seen,bot_level FROM players WHERE room_id=? AND name=?').bind(room.id,name).first();if(duplicate&&(duplicate.bot_level||now-duplicate.last_seen<120000))return json({error:'同じ名前のプレイヤーがいます'},409);
     if(duplicate)await db.prepare('DELETE FROM players WHERE id=?').bind(duplicate.id).run();
     const playerId=id(),newToken=id()+id(),newProfileId=profileId||id();await db.batch([db.prepare('INSERT INTO players(id,room_id,profile_id,name,token,is_host,score,joined_at,last_seen) VALUES(?,?,?,?,?,0,0,?,?)').bind(playerId,room.id,newProfileId,name,newToken,now,now),db.prepare('INSERT INTO events(room_id,kind,message,created_at) VALUES(?,?,?,?)').bind(room.id,'join',name+'が参加',now)]);return json({token:newToken,profileId:newProfileId});
