@@ -5,7 +5,7 @@ Claude Code / Codex のどちらも、作業開始時にこのファイルを読
 ## 作業中（同時編集防止）
 | 担当AI | ブランチ | 編集予定ファイル | 開始日 |
 |---|---|---|---|
-| （なし） | | | |
+| Claude Code | `claude/fix-room-not-found` | dist/server/index.js, dist/server/ui.js, e2e/ | 2026-11-14 |
 
 ## 未解決の問題
 - `.openai/hosting.json` は Codex/OpenAI 側のホスティング設定ファイル。`.gitignore` に `hosting.json` が含まれるが、既に追跡されている。扱いは未決定。
